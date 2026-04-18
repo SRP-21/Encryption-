@@ -107,24 +107,6 @@ module simon_top_tb;
             64'd0
         );
 
-        // ==================================================================
-        // TV2 - NSA paper (2013) Appendix C, Table C.1 cross-check
-        //
-        //   Appendix C lists the state after EVERY round.  After round 16:
-        //     Pt_16 = (x=6fc2, y=1587)
-        //   This value appears verbatim in the paper's round-by-round table.
-        //
-        //   We use Pt_16 as a new plaintext input with the SAME key, then run
-        //   all 32 rounds.  The result is a ciphertext grounded entirely in
-        //   values the paper explicitly lists - any bug in rounds 1-16 of our
-        //   key schedule or round function will cause this test to fail even if
-        //   TV1 accidentally passes.
-        //
-        //   data_in  = {x=6fc2, y=1587} = 32'h6fc2_1587
-        //   key      = 64'h1918_1110_0908_0100  (same as TV1)
-        //   expected = 32'h1e6c_6815
-        //     (derived from paper: encrypt(Pt_16) with paper's key schedule)
-        // ==================================================================
         run_test(
             64'h1918_1110_0908_0100,   // same key as Appendix B/C
             32'h6fc2_1587,              // pt = Appendix C Pt_16 value
