@@ -66,6 +66,7 @@ module top_module(
     
     reg [127:0] d_in_aes;
     reg [31:0]  d_in_simon;
+    reg [31:0] data_batch;
     wire [127:0] stagereg_aes;
     wire [31:0] stagereg_simon;
     wire [1:0] crypt_sel;
@@ -76,6 +77,8 @@ module top_module(
     wire done_aes_core;
     wire done_simon_core;
     reg start_global;
+    integer n = 0;
+    
     
     selection_logic sl1(
     .protocol(protocol),
@@ -136,8 +139,11 @@ begin
         NS = DONE;
 end
         
-       DONE:
-    NS = IDLE;   
+       DONE: begin
+    NS = IDLE; 
+     if (crypt_sel == simon && raw_data[(n-1)*32 +: 32] != 0) NS = LOAD;
+     
+    end 
         endcase
     end
 
@@ -150,6 +156,8 @@ end
             begin
             if (crypt_sel == aes) busy_aes = 1;
             else if (crypt_sel == simon) busy_simon = 1;
+            
+            
             end
         endcase
     end
@@ -191,6 +199,7 @@ end
    
     
     always @(posedge clk or posedge rst) begin
+        
         if (rst) begin
             d_in_aes    <= 0;
             d_in_simon <= 0;
@@ -198,7 +207,15 @@ end
             data_out_simon <= 0;
          
         end
-        
+            
+            case(n)  
+            1: data_batch = raw_data[31:0];
+            2: data_batch = raw_data[63:32];
+            3: data_batch = raw_data[95:64];
+            4: data_batch = raw_data[127:96];
+            endcase   
+                
+                
             case (CS)
                 
                 LOAD: begin
@@ -206,8 +223,8 @@ end
                         d_in_aes <= raw_data;
                     end
                     else begin
-                        
-                        d_in_simon <= raw_data[31:0];
+                            
+                        d_in_simon <= data_batch;
                     end
                 end
                 
@@ -218,14 +235,18 @@ end
                     begin
                     data_out_aes   <= stagereg_aes;
                     data_out_simon   <= 0;
-                    aes_fifo <= aes_fifo >> 128;
+                    
+  
+                     
+                     
                     end
                     
                 else if (crypt_sel == simon)
                     begin
                     data_out_simon  <= stagereg_simon ;
                     data_out_aes    <= 0;
-                    simon_fifo <= simon_fifo >> 32;
+                    n <= n+1;
+                    
                     end                 
                 end
                               
