@@ -40,15 +40,15 @@ endfunction
 genvar i;
 generate
     for(i=0;i<4;i=i+1) begin : col
-        wire [7:0] s0 = in[i*32 +:8];
-        wire [7:0] s1 = in[i*32+8 +:8];
-        wire [7:0] s2 = in[i*32+16 +:8];
-        wire [7:0] s3 = in[i*32+24 +:8];
+        wire [7:0] s0 = in[127-i*32 -:8];
+        wire [7:0] s1 = in[119-i*32 -:8];
+        wire [7:0] s2 = in[111-i*32 -:8];
+        wire [7:0] s3 = in[103-i*32 -:8];
 
-        assign out[i*32 +:8]      = mul2(s0)^mul3(s1)^s2^s3;
-        assign out[i*32+8 +:8]    = s0^mul2(s1)^mul3(s2)^s3;
-        assign out[i*32+16 +:8]   = s0^s1^mul2(s2)^mul3(s3);
-        assign out[i*32+24 +:8]   = mul3(s0)^s1^s2^mul2(s3);
+        assign out[127-i*32 -:8] = mul2(s0)^mul3(s1)^s2^s3;
+        assign out[119-i*32 -:8] = s0^mul2(s1)^mul3(s2)^s3;
+        assign out[111-i*32 -:8] = s0^s1^mul2(s2)^mul3(s3);
+        assign out[103-i*32 -:8] = mul3(s0)^s1^s2^mul2(s3);
     end
 endgenerate
 
