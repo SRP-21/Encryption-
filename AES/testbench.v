@@ -4,72 +4,51 @@ module tb;
 
 reg clk;
 reg rst;
-reg start;
 reg [127:0] plaintext;
 reg [127:0] key;
 
 wire [127:0] ciphertext;
-wire done;
 
-// 👉 FIXED: use aes_6round
- aes_6round uut (
+aeslite_pipeline uut (
     .clk(clk),
     .rst(rst),
-    .start(start),
     .plaintext(plaintext),
     .key(key),
-    .ciphertext(ciphertext),
-    .done(done)
+    .ciphertext(ciphertext)
 );
 
-// Clock
+// Clock generation
 always #5 clk = ~clk;
 
 initial begin
     clk = 0;
     rst = 1;
-    start = 0;
-
     plaintext = 128'h00112233445566778899aabbccddeeff;
     key       = 128'h000102030405060708090a0b0c0d0e0f;
 
-    // Release reset
     #10 rst = 0;
 
-    // Start
-    #10 start = 1;
-    #10 start = 0;
-
-    // 👉 FIXED: safe wait
-    repeat(50) @(posedge clk);
+    // Wait 8 cycles for pipeline to fill and produce valid output
+    repeat(8) @(posedge clk);
 
     $display("=====================================");
     $display("Final Ciphertext = %h", ciphertext);
+    $display("Expected 6-round = b6e3b9ede3d146f398a2c823ede4c224");
     $display("=====================================");
 
-    // 👉 Reset before next test
-    #10 rst = 1;
-    #10 rst = 0;
-
-    // Second test
+    // Second test vector
     plaintext = 128'h112233445566778899aabbccddeeff00;
+    key       = 128'h000102030405060708090a0b0c0d0e0f;
 
-    #10 start = 1;
-    #10 start = 0;
-
-    repeat(50) @(posedge clk);
+    // Wait another 8 cycles
+    repeat(8) @(posedge clk);
 
     $display("=====================================");
-    $display("Second Output = %h", ciphertext);
+    $display("Second Ciphertext = %h", ciphertext);
+    $display("Expected 6-round = 34aaa9beb19118b624f48bd0eb44c879");
     $display("=====================================");
 
     #50 $finish;
-end
-
-// Monitor
-initial begin
-    $monitor("Time=%0t | start=%b | done=%b | CT=%h",
-              $time, start, done, ciphertext);
 end
 
 endmodule
